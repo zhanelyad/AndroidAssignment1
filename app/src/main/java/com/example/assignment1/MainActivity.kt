@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,9 +28,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 
 
@@ -47,14 +50,19 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ProfileCard(){
-    var isFollowing = remember{ mutableStateOf(false)}
-    var followers = remember{ mutableStateOf(200)}
+    var isFollowing by rememberSaveable { mutableStateOf(false)}
+    var followers by rememberSaveable { mutableStateOf(200)}
+
+    val buttonColor by animateColorAsState(
+        targetValue = if(isFollowing) Color.Gray else Color(0xFF9C27B0),
+        label = "buttonColor"
+    )
 
     Box (
         modifier = Modifier.fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF2196F3), Color(0xFFBBDEFB))
+                    colors = listOf(Color(0xFF9C27B0), Color(0xFFE1BEE7))
                 )
             ),
         contentAlignment = Alignment.Center
@@ -94,10 +102,11 @@ fun ProfileCard(){
                     color = Color.Black
                 )
                 Text(
-                    text = "Android learner\nCompose beginner",
+                    text = "Android learner ✨\nDancer 💃\nAi Tea lover 🍵",
                     fontSize = 14.sp,
-                    color = Color.Gray,
+                    color = Color(0xFF9C27B0),
                     textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
 
                 )
 
@@ -131,7 +140,7 @@ fun ProfileCard(){
                             color = Color.Gray
                         )
                         Text(
-                            text = "${followers.value}",
+                            text = "${followers}",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -152,20 +161,32 @@ fun ProfileCard(){
 
                 Button(
                     onClick = {
-                        if(isFollowing.value){
-                            followers.value--
+                        if(isFollowing){
+                            followers--
                         } else{
-                            followers.value++
+                            followers++
                         }
-                        isFollowing.value = !isFollowing.value },
+                        isFollowing = !isFollowing },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isFollowing.value) Color.Gray else Color.Blue
+                        containerColor = buttonColor
                     )
                 ) {
                     Text(
-                        text = if (isFollowing.value) "Following" else "Follow",
+                        text = if (isFollowing) "Unfollow" else "Follow",
                         color = Color.White
                     )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(onClick = { }) {
+                        Text("Message")
+                    }
+                    OutlinedButton(onClick = { }) {
+                        Text("Share Profile")
+                    }
                 }
             }
         }
@@ -180,21 +201,3 @@ fun ProfileCardPreview() {
         ProfileCard()
     }
 }
-//fun Greeting(name: String, modifier: Modifier = Modifier) {
-//    Text(
-//        text = "Hello $name!",
-//        modifier = Modifier
-//            .background(Color.Yellow)
-//            .padding(16.dp),
-//        color = Color.Blue,
-//        fontSize = 16.sp
-//    )
-//}
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun GreetingPreview() {
-//    Assignment1Theme {
-//        Greeting("Zhanel")
-//    }
-//}
