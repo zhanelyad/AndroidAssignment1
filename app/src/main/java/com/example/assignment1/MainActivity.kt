@@ -5,36 +5,26 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.assignment1.ui.theme.Assignment1Theme
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.material3.CardDefaults
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-
-
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,51 +32,77 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Assignment1Theme {
-                ProfileCard()
+                ProfilePage()
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileCard(){
-    var isFollowing by rememberSaveable { mutableStateOf(false)}
-    var followers by rememberSaveable { mutableStateOf(200)}
+fun ProfilePage() {
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    val buttonColor by animateColorAsState(
-        targetValue = if(isFollowing) Color.Gray else Color(0xFF9C27B0),
-        label = "buttonColor"
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Profile", style = MaterialTheme.typography.titleLarge) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbar) },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            ProfileCard(snackbar, scope)
+        }
+    }
+}
+
+@Composable
+fun ProfileCard(snackbar: SnackbarHostState, scope: CoroutineScope) {
+    var followed by rememberSaveable { mutableStateOf(false) }
+    var followers by rememberSaveable { mutableStateOf(200) }
+    var showDialog by remember { mutableStateOf(false) }
+
+    val btnColor by animateColorAsState(
+        targetValue = if (followed) MaterialTheme.colorScheme.secondary
+        else MaterialTheme.colorScheme.primary,
+        label = "btnColor"
     )
 
-    Box (
-        modifier = Modifier.fillMaxSize()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF9C27B0), Color(0xFFE1BEE7))
+                    listOf(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        MaterialTheme.colorScheme.surface
+                    )
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
         Card(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(36.dp, 180.dp),
-
-
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surface
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            elevation = CardDefaults.cardElevation(6.dp)
         ) {
             Column(
-
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            )
-            {
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Image(
                     painter = painterResource(id = R.drawable.profilephoto),
                     contentDescription = "Profile picture",
@@ -94,110 +110,120 @@ fun ProfileCard(){
                         .size(100.dp)
                         .clip(CircleShape)
                 )
+
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(text = "Zhanel Dyusseyeva",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
                 Text(
-                    text = "Android learner ✨\nDancer 💃\nAi Tea lover 🍵",
-                    fontSize = 14.sp,
-                    color = Color(0xFF9C27B0),
-                    textAlign = TextAlign.Center,
-                    lineHeight = 20.sp
-
+                    "Zhanel Dyusseyeva",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+
+                Text(
+                    "Android learner ✨\nDancer 💃\nAi Tea lover 🍵",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 24.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
-
-                )
-
-
-                {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally){
-                        Text(
-                            text = "Posts",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                        Text(
-                            text = "25",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally){
-                        Text(
-                            text = "Followers",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                        Text(
-                            text = "${followers}",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally){
-                        Text(
-                            text = "Following",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                        Text(
-                            text = "117",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                ) {
+                    Stat("Posts", "25")
+                    Stat("Followers", followers.toString())
+                    Stat("Following", "117")
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = {
-                        if(isFollowing){
-                            followers--
-                        } else{
+                        if (followed) {
+                            showDialog = true
+                        } else {
                             followers++
+                            followed = true
+                            scope.launch {
+                                snackbar.showSnackbar("You followed Zhanel ")
+                            }
                         }
-                        isFollowing = !isFollowing },
+                    },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = buttonColor
+                        containerColor = btnColor,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
-                    Text(
-                        text = if (isFollowing) "Unfollow" else "Follow",
-                        color = Color.White
-                    )
+                    Text(if (followed) "Unfollow" else "Follow")
                 }
+
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(onClick = { }) {
-                        Text("Message")
+                        Text("Message", color = MaterialTheme.colorScheme.primary)
                     }
                     OutlinedButton(onClick = { }) {
-                        Text("Share Profile")
+                        Text("Share", color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
         }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        followers--
+                        followed = false
+                        showDialog = false
+                        scope.launch {
+                            snackbar.showSnackbar("You unfollowed Zhanel")
+                        }
+                    }) {
+                        Text("Yes", color = MaterialTheme.colorScheme.primary)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false }) {
+                        Text("Cancel", color = MaterialTheme.colorScheme.secondary)
+                    }
+                },
+                text = {
+                    Text(
+                        "Are you sure you want to unfollow Zhanel?",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        }
     }
 }
 
+@Composable
+fun Stat(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline
+        )
+        Text(
+            value,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
-fun ProfileCardPreview() {
+fun ProfilePreview() {
     Assignment1Theme {
-        ProfileCard()
+        ProfilePage()
     }
 }
