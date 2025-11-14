@@ -1,13 +1,18 @@
 package com.example.assignment1
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.assignment1.data.UserProfile
+import com.example.assignment1.data.UserRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class Follower(
@@ -17,15 +22,22 @@ data class Follower(
     var isFollowed: Boolean = false
 )
 
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(private val repo: UserRepository) : ViewModel() {
+
+
+    val profiles: StateFlow<List<UserProfile>> =
+        repo.getAllProfiles().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
+    fun addProfile(profile: UserProfile) = viewModelScope.launch { repo.insertProfile(profile) }
+    fun removeProfile(profile: UserProfile) = viewModelScope.launch { repo.deleteProfile(profile) }
 
     var name by mutableStateOf("Zhanel Dyusseyeva")
         private set
     var bio by mutableStateOf("Android learner ✨\nAI Tea lover 🍵")
         private set
-
     var isFollowed by mutableStateOf(false)
         private set
+
     private val _followers = mutableStateListOf(
         Follower(1, "Alan", R.drawable.avatar1),
         Follower(2, "Aidana", R.drawable.avatar2),
@@ -41,12 +53,10 @@ class ProfileViewModel : ViewModel() {
     fun toggleFollow() {
         isFollowed = !isFollowed
         viewModelScope.launch {
-            _events.emit(
-                if (isFollowed) "You followed Zhanel"
-                else "You unfollowed Zhanel"
-            )
+            _events.emit(if (isFollowed) "You followed $name" else "You unfollowed $name")
         }
     }
+
     fun updateName(newName: String) {
         name = newName
         notify("Name updated")
@@ -66,7 +76,6 @@ class ProfileViewModel : ViewModel() {
         _followers.add(f)
         notify("${f.name} restored")
     }
-    private fun notify(msg: String) {
-        viewModelScope.launch { _events.emit(msg) }
-    }
+
+    private fun notify(msg: String) = viewModelScope.launch { _events.emit(msg) }
 }
